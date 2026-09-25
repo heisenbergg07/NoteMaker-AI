@@ -6,6 +6,7 @@ import { env } from "./config/env.js";
 import cookieParser from "cookie-parser";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
+import authRoutes from "./modules/auth/auth.routes.js";
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use(cookieParser());
 
 // health check routes
 app.use("/health", healthRouter);
+
+// auth routes
+app.use("/api/v1/auth", authRoutes);
 
 // 404 handler
 app.use(notFoundMiddleware);

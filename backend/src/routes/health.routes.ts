@@ -17,7 +17,7 @@ healthRouter.get('/db', async (req, res) => {
     const notes = await prisma.note.findMany();
     res.status(200).json({
       success: true,
-      message: notes
+      data: notes
     })
    } catch (error){
     console.log(error);
