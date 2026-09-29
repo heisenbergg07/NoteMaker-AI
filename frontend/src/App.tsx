@@ -1,9 +1,29 @@
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import LoginPage from "./pages/auth/LoginPage";
+import DashboardPage from "./pages/dashboard/DashboardPage";
+import RegisterPage from "./pages/auth/RegisterPage";
+
 function App() {
   return (
-    <div>
-      <h1>NoteMaker AI</h1>
-      <p>Your notes, but smarter.</p>
-    </div>
+   <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace/>}/>
+       <Route
+          path="/login"
+          element={<LoginPage />}
+        />
+
+      <Route
+          path="/register"
+          element={<RegisterPage />}
+        />
+
+        <Route
+          path="/dashboard"
+          element={<DashboardPage />}
+        />
+    </Routes>
+   </BrowserRouter>
   );
 }
 
