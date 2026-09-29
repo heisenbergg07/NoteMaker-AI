@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import authRoutes from "./modules/auth/auth.routes.js";
+import notesRoutes from "./modules/notes/notes.routes.js"
 
 const app = express();
 
@@ -30,6 +31,9 @@ app.use("/health", healthRouter);
 
 // auth routes
 app.use("/api/v1/auth", authRoutes);
+
+// Notes routes
+app.use("/api/v1/notes", notesRoutes);
 
 // 404 handler
 app.use(notFoundMiddleware);
