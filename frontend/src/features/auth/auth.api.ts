@@ -1,11 +1,6 @@
 import api from "../../services/api";
+import type { ApiResponse } from "../../types/ApiResponse";
 import type { AuthResponse, LoginInput, RegisterInput, User } from "./auth.types";
-
-type ApiResponse<T> = {
-    success: boolean;
-    message?: string;
-    data: T;
-};
 
 export const registerUser = async (input: RegisterInput): Promise<AuthResponse> => {
     const response = await api.post<ApiResponse<AuthResponse>>("api/v1/auth/register", input);
