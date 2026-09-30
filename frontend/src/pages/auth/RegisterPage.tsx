@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { registerUser } from "../../features/auth/auth.api";
+import { useAuthStore } from "../../store/auth.store";
 
 function RegisterPage() {
   const navigate = useNavigate();
+  const { setAuth } = useAuthStore()
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,15 +30,7 @@ function RegisterPage() {
         password,
       });
 
-      localStorage.setItem(
-        "token",
-        result.token
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(result.user)
-      );
+     setAuth(result.user, result.token);
 
       navigate("/dashboard");
     } catch (error) {

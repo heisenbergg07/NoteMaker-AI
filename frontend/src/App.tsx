@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import RegisterPage from "./pages/auth/RegisterPage";
+import ProtectedRoute from "./features/auth/ProtectedRoute";
 
 function App() {
   return (
@@ -18,10 +19,12 @@ function App() {
           element={<RegisterPage />}
         />
 
+      <Route element={<ProtectedRoute />}>
         <Route
           path="/dashboard"
           element={<DashboardPage />}
         />
+      </Route>
     </Routes>
    </BrowserRouter>
   );

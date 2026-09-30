@@ -1,5 +1,5 @@
 import api from "../../services/api";
-import type { AuthResponse, LoginInput, RegisterInput } from "./auth.types";
+import type { AuthResponse, LoginInput, RegisterInput, User } from "./auth.types";
 
 type ApiResponse<T> = {
     success: boolean;
@@ -19,6 +19,14 @@ export const loginUser = async (
   const response = await api.post<ApiResponse<AuthResponse>>(
     "/api/v1/auth/login",
     input
+  );
+
+  return response.data.data;
+};
+
+export const getCurrentUser = async (): Promise<User> => {
+  const response = await api.get<ApiResponse<User>>(
+    "/api/v1/auth/me"
   );
 
   return response.data.data;

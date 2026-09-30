@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { loginUser } from "../../features/auth/auth.api";
+import { useAuthStore } from "../../store/auth.store";
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { setAuth } = useAuthStore()
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,15 +28,7 @@ function LoginPage() {
         password,
       });
 
-      localStorage.setItem(
-        "token",
-        result.token
-      );
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify(result.user)
-      );
+      setAuth(result.user, result.token);
 
       navigate("/dashboard");
     } catch (error) {
