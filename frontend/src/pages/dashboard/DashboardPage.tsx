@@ -9,6 +9,7 @@ import { useAuthStore } from "../../store/auth.store";
 
 import { completeNote, deleteNote, getNotes } from "../../features/notes/notes.api";
 import type { Note } from "../../features/notes/note.types";
+import EditNoteModal from "../../components/notes/EditNoteModal";
 
 function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -17,6 +18,7 @@ function DashboardPage() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
   // Create Note modal state
   const [isCreateModalOpen, setIsCreateModalOpen] =
@@ -118,6 +120,18 @@ const handleDeleteNote = async (
       error
     );
   }
+};
+
+const handleNoteUpdated = (
+  updatedNote: Note
+) => {
+  setNotes((currentNotes) =>
+    currentNotes.map((note) =>
+      note.id === updatedNote.id
+        ? updatedNote
+        : note
+    )
+  );
 };
 
   return (
@@ -252,9 +266,7 @@ const handleDeleteNote = async (
                       key={note.id}
                       note={note}
                       onComplete={handleCompleteNote}
-                      onEdit={(note) => {
-                        console.log("Edit:", note);
-                      }}
+                      onEdit={setSelectedNote}
                       onDelete={handleDeleteNote}
                     />
                   ))}
@@ -272,6 +284,18 @@ const handleDeleteNote = async (
         }
         onCreated={handleNoteCreated}
       />
+
+      {
+        selectedNote &&  
+        <EditNoteModal
+          note={selectedNote}
+          onClose={() =>
+            setSelectedNote(null)
+          }
+          onUpdated={handleNoteUpdated}
+        />
+      }
+
     </AppLayout>
   );
 }

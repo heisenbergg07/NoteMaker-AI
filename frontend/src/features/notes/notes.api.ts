@@ -13,12 +13,13 @@ export type UpdateNoteInput = {
   status?: NoteStatus;
 };
 
-
+// Get all notes
 export const getNotes = async (): Promise<Note[]> => {
     const response = await api.get<ApiResponse<Note[]>>("/api/v1/notes");
     return response.data.data;
 };
 
+// Create a note
 export const createNote = async (
   input: CreateNoteInput
 ): Promise<Note> => {
@@ -45,6 +46,7 @@ export const updateNote = async (
   return response.data.data;
 };
 
+// Mark note completed
 export const completeNote = async (
   noteId: string
 ): Promise<Note> => {
