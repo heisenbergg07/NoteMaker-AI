@@ -1,32 +1,61 @@
 import { useEffect, useState } from "react";
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 
 import AppLayout from "../../components/layout/AppLayout";
 import AICommandInput from "../../components/ai/AICommandInput";
 import NoteCard from "../../components/notes/NoteCard";
 import CreateNoteModal from "../../components/notes/CreateNoteModal";
+import EditNoteModal from "../../components/notes/EditNoteModal";
 
 import { useAuthStore } from "../../store/auth.store";
 
-import { completeNote, deleteNote, getNotes } from "../../features/notes/notes.api";
+import {
+  completeNote,
+  deleteNote,
+  getNotes,
+} from "../../features/notes/notes.api";
+
 import type { Note } from "../../features/notes/note.types";
-import EditNoteModal from "../../components/notes/EditNoteModal";
 
 function DashboardPage() {
   const user = useAuthStore((state) => state.user);
 
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // -----------------------------------
   // Notes state
+  // -----------------------------------
+
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
 
-  // Create Note modal state
-  const [isCreateModalOpen, setIsCreateModalOpen] =
-    useState(false);
+  // -----------------------------------
+  // Edit modal state
+  // -----------------------------------
 
-  // Fetch notes when Dashboard loads
+  const [selectedNote, setSelectedNote] =
+    useState<Note | null>(null);
+
+  // -----------------------------------
+  // URL state
+  // -----------------------------------
+
+  const filter =
+    searchParams.get("filter") ?? "all";
+
+  const shouldOpenCreateModal =
+    searchParams.get("create") === "true";
+
+  // -----------------------------------
+  // Fetch notes
+  // -----------------------------------
+
   useEffect(() => {
-    console.log("#### fetch notes")
     const fetchNotes = async () => {
       try {
         setLoading(true);
@@ -52,7 +81,10 @@ function DashboardPage() {
     fetchNotes();
   }, []);
 
+  // -----------------------------------
   // Dashboard statistics
+  // -----------------------------------
+
   const totalNotes = notes.length;
 
   const pendingNotes = notes.filter(
@@ -63,7 +95,28 @@ function DashboardPage() {
     (note) => note.status === "COMPLETED"
   ).length;
 
-  // Called by CreateNoteModal after API succeeds
+  // -----------------------------------
+  // Filter notes
+  // -----------------------------------
+
+  const filteredNotes = notes.filter(
+    (note) => {
+      if (filter === "pending") {
+        return note.status === "PENDING";
+      }
+
+      if (filter === "completed") {
+        return note.status === "COMPLETED";
+      }
+
+      return true;
+    }
+  );
+
+  // -----------------------------------
+  // Create Note
+  // -----------------------------------
+
   const handleNoteCreated = (
     newNote: Note
   ) => {
@@ -73,66 +126,96 @@ function DashboardPage() {
     ]);
   };
 
-  const handleCompleteNote = async (
-  note: Note
-) => {
-  try {
-    const updatedNote = await completeNote(note.id);
+  // -----------------------------------
+  // Update Note
+  // -----------------------------------
 
+  const handleNoteUpdated = (
+    updatedNote: Note
+  ) => {
     setNotes((currentNotes) =>
-      currentNotes.map((currentNote) =>
-        currentNote.id === updatedNote.id
+      currentNotes.map((note) =>
+        note.id === updatedNote.id
           ? updatedNote
-          : currentNote
+          : note
       )
     );
-  } catch (error) {
-    console.error(
-      "Failed to complete note:",
-      error
-    );
-  }
-};
+  };
 
-const handleDeleteNote = async (
-  note: Note
-) => {
-  const shouldDelete = window.confirm(
-    `Delete "${note.title}"?`
-  );
+  // -----------------------------------
+  // Complete Note
+  // -----------------------------------
 
-  if (!shouldDelete) {
-    return;
-  }
+  const handleCompleteNote = async (
+    note: Note
+  ) => {
+    try {
+      const updatedNote =
+        await completeNote(note.id);
 
-  try {
-    await deleteNote(note.id);
+      setNotes((currentNotes) =>
+        currentNotes.map((currentNote) =>
+          currentNote.id === updatedNote.id
+            ? updatedNote
+            : currentNote
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to complete note:",
+        error
+      );
+    }
+  };
 
-    setNotes((currentNotes) =>
-      currentNotes.filter(
-        (currentNote) =>
-          currentNote.id !== note.id
-      )
-    );
-  } catch (error) {
-    console.error(
-      "Failed to delete note:",
-      error
-    );
-  }
-};
+  // -----------------------------------
+  // Delete Note
+  // -----------------------------------
 
-const handleNoteUpdated = (
-  updatedNote: Note
-) => {
-  setNotes((currentNotes) =>
-    currentNotes.map((note) =>
-      note.id === updatedNote.id
-        ? updatedNote
-        : note
-    )
-  );
-};
+  const handleDeleteNote = async (
+    note: Note
+  ) => {
+    const shouldDelete =
+      window.confirm(
+        `Delete "${note.title}"?`
+      );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    try {
+      await deleteNote(note.id);
+
+      setNotes((currentNotes) =>
+        currentNotes.filter(
+          (currentNote) =>
+            currentNote.id !== note.id
+        )
+      );
+    } catch (error) {
+      console.error(
+        "Failed to delete note:",
+        error
+      );
+    }
+  };
+
+  // -----------------------------------
+  // Filter title
+  // -----------------------------------
+
+  const getNotesTitle = () => {
+    if (filter === "pending") {
+      return "Pending Notes";
+    }
+
+    if (filter === "completed") {
+      return "Completed Notes";
+    }
+
+    return "Recent Notes";
+  };
 
   return (
     <AppLayout>
@@ -140,6 +223,7 @@ const handleNoteUpdated = (
         <div className="mx-auto max-w-7xl">
 
           {/* Header */}
+
           <div className="mb-8 flex items-start justify-between gap-4">
             <div>
               <p className="text-sm text-slate-400">
@@ -151,14 +235,17 @@ const handleNoteUpdated = (
               </h1>
 
               <p className="mt-2 text-slate-400">
-                What would you like to do with your notes?
+                What would you like to do
+                with your notes?
               </p>
             </div>
 
             <button
               type="button"
               onClick={() =>
-                setIsCreateModalOpen(true)
+                navigate(
+                  "/dashboard?create=true"
+                )
               }
               className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-500"
             >
@@ -166,12 +253,14 @@ const handleNoteUpdated = (
             </button>
           </div>
 
-          {/* AI Command Input */}
+          {/* AI Command */}
+
           <div className="mb-10 max-w-4xl">
             <AICommandInput />
           </div>
 
           {/* Statistics */}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard
               title="Total Notes"
@@ -189,32 +278,42 @@ const handleNoteUpdated = (
             />
           </div>
 
-          {/* Recent Notes */}
+          {/* Notes Section */}
+
           <div className="mt-8 rounded-xl border border-slate-800 bg-slate-950 p-6">
 
             {/* Section Header */}
+
             <div className="mb-5 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-white">
-                  Recent Notes
+                  {getNotesTitle()}
                 </h2>
 
                 <p className="mt-1 text-sm text-slate-500">
-                  Your latest notes and tasks
+                  {filter === "pending" &&
+                    "Notes that still need your attention."}
+
+                  {filter === "completed" &&
+                    "Notes you've completed."}
+
+                  {filter === "all" &&
+                    "Your latest notes and tasks."}
                 </p>
               </div>
 
               {!loading && !error && (
                 <span className="text-sm text-slate-500">
-                  {notes.length}{" "}
-                  {notes.length === 1
+                  {filteredNotes.length}{" "}
+                  {filteredNotes.length === 1
                     ? "note"
                     : "notes"}
                 </span>
               )}
             </div>
 
-            {/* Loading State */}
+            {/* Loading */}
+
             {loading && (
               <div className="flex min-h-48 items-center justify-center">
                 <p className="text-sm text-slate-400">
@@ -223,7 +322,8 @@ const handleNoteUpdated = (
               </div>
             )}
 
-            {/* Error State */}
+            {/* Error */}
+
             {!loading && error && (
               <div className="flex min-h-48 items-center justify-center">
                 <div className="text-center">
@@ -238,71 +338,95 @@ const handleNoteUpdated = (
               </div>
             )}
 
-            {/* Empty State */}
+            {/* Empty */}
+
             {!loading &&
               !error &&
-              notes.length === 0 && (
+              filteredNotes.length === 0 && (
                 <div className="flex min-h-48 items-center justify-center">
                   <div className="text-center">
+
                     <p className="text-slate-400">
-                      You don't have any notes yet.
+                      {filter === "pending"
+                        ? "You don't have any pending notes."
+                        : filter ===
+                            "completed"
+                          ? "You haven't completed any notes yet."
+                          : "You don't have any notes yet."}
                     </p>
 
                     <p className="mt-1 text-sm text-slate-500">
-                      Ask NoteMaker AI or create
-                      your first note.
+                      {filter === "all"
+                        ? "Ask NoteMaker AI or create your first note."
+                        : "Select another category from the sidebar."}
                     </p>
+
                   </div>
                 </div>
               )}
 
             {/* Notes Grid */}
+
             {!loading &&
               !error &&
-              notes.length > 0 && (
+              filteredNotes.length > 0 && (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {notes.map((note) => (
-                    <NoteCard
-                      key={note.id}
-                      note={note}
-                      onComplete={handleCompleteNote}
-                      onEdit={setSelectedNote}
-                      onDelete={handleDeleteNote}
-                    />
-                  ))}
+
+                  {filteredNotes.map(
+                    (note) => (
+                      <NoteCard
+                        key={note.id}
+                        note={note}
+                        onComplete={
+                          handleCompleteNote
+                        }
+                        onEdit={
+                          setSelectedNote
+                        }
+                        onDelete={
+                          handleDeleteNote
+                        }
+                      />
+                    )
+                  )}
+
                 </div>
               )}
+
           </div>
         </div>
       </div>
 
       {/* Create Note Modal */}
+
       <CreateNoteModal
-        isOpen={isCreateModalOpen}
+        isOpen={shouldOpenCreateModal}
         onClose={() =>
-          setIsCreateModalOpen(false)
+          navigate("/dashboard")
         }
         onCreated={handleNoteCreated}
       />
 
-      {
-        selectedNote &&  
+      {/* Edit Note Modal */}
+
+      {selectedNote && (
         <EditNoteModal
+          key={selectedNote.id}
           note={selectedNote}
           onClose={() =>
             setSelectedNote(null)
           }
           onUpdated={handleNoteUpdated}
         />
-      }
+      )}
 
     </AppLayout>
   );
 }
 
-/* ----------------------------------
-   Dashboard Stat Card
------------------------------------ */
+/* -----------------------------------
+   Stat Card
+------------------------------------ */
 
 type StatCardProps = {
   title: string;
