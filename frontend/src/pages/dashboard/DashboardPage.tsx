@@ -256,7 +256,7 @@ function DashboardPage() {
           {/* AI Command */}
 
           <div className="mb-10 max-w-4xl">
-            <AICommandInput />
+            <AICommandInput onNoteCreated={handleNoteCreated}/>
           </div>
 
           {/* Statistics */}

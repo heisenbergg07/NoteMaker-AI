@@ -4,6 +4,7 @@ import type {
   Response,
 } from "express";
 import { aiCommandSchema } from "./ai.schemas.js";
+import { processAICommand } from "./ai.service.js";
 
 export const handleAICommand =async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -21,6 +22,18 @@ export const handleAICommand =async (req: Request, res: Response, next: NextFunc
 
     const userId = req.user?.userId;
 
+    if (!userId) {
+        return res.status(401).json({
+            success: false,
+            message: "Unauthorized",
+        });
+    }
+
+    const aiResult = await processAICommand(
+        message,
+        userId
+   );
+
     console.log("AI command:", {
         userId,
         message,
@@ -29,9 +42,7 @@ export const handleAICommand =async (req: Request, res: Response, next: NextFunc
     return res.status(200).json({
         success: true,
         message: "AI endpoint is ready",
-        data: {
-            input: message,
-        },
+        data: aiResult,
     });
   } catch (error) {
      next(error);
