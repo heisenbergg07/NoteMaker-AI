@@ -8,6 +8,7 @@ import { notFoundMiddleware } from "./middlewares/not-found.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import authRoutes from "./modules/auth/auth.routes.js";
 import notesRoutes from "./modules/notes/notes.routes.js"
+import aiRoutes from "./modules/ai/ai.routes.js"
 
 const app = express();
 
@@ -34,6 +35,9 @@ app.use("/api/v1/auth", authRoutes);
 
 // Notes routes
 app.use("/api/v1/notes", notesRoutes);
+
+// AI routes
+app.use("/api/v1/ai", aiRoutes);
 
 // 404 handler
 app.use(notFoundMiddleware);
